@@ -10,6 +10,26 @@ The name "Wasmosis" comes from "Wasm", short for "WebAssembly", and "osmosis", a
 
 L4 and seL4 microkernels inspired the capability-based security and the message-passing via synchronous function call, with modifications for a single-threaded web context.
 
+## Goals
+
+High-level:
+* Provide a way for web apps to embed WebAssembly "plugins", "widgets", etc with relatively high security guarantees.
+* Have this model work for both trusted JS-implemented modules and untrusted Wasm-implemented modules.
+* Allow safe transfer of object references from module to module (eg, modules can safely delegate their permissions on to their own plugins)
+* Implement an example app+plugin in the web/browser environment.
+
+Low-level:
+* Define a minimal "microkernel"-like API+ABI for capability-passing and synchronous calls between modules with separate address spaces.
+* Define mid-level web-oriented embedding APIs providing an asynchronous event loop, event subscription, and promises.
+* Implement a JS kernel,
+* Implement a C API header.
+* Implement a Rust API crate.
+
+Example plans to exercise the kernel API and implementation:
+* Implement a sample JS module exposing an API (say, an HTML `<canvas>` drawing context with mouse/touch events).
+* Implement a sample Wasm widget module (say, a simple paint app).
+* Implement a sample Wasm plugin module for it (say, an image filter).
+
 # Process model
 
 WebAssembly module instances each have a 4 GiB _linear memory_ address space, with usable memory in a single flat run from position 0 until the current size of memory. Memory can be expanded in 64 KiB increments up to a limit predefined when creating the memory. There is also a _table_ of runtime-callable function references, with C function pointers implemented as table indexes.
