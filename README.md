@@ -21,7 +21,7 @@ High-level:
 Low-level:
 * Define a minimal "microkernel"-like API+ABI for capability-passing and synchronous calls between modules with separate address spaces.
 * Define mid-level web-oriented embedding APIs providing an asynchronous event loop, event subscription, and promises.
-* Implement a JS kernel,
+* Implement a JS kernel.
 * Implement a C API header.
 * Implement a Rust API crate.
 
