@@ -102,6 +102,8 @@ A handle holds an opaque pointer in your module's address space, which can be re
 
 The "class ref" opaque pointer is used to validate the handle along with the cap ownership -- it's convenient to use something like a symbol address that's type-unique within the process. If you ask for a handle's user_data without owning it, or without a matching class_ref, you'll get NULL back.
 
+When done with it, use `cap_revoke` to invalidate the pointer.
+
 ## Ports
 
 Ports are indirect function references for cross-module calls. Given a port, you can make synchronous calls to it with some specific number of parameters (currently from 0 to 4) and a single return value, all of which are in the caps namespace.
@@ -119,6 +121,8 @@ Note that caps passed as arguments are "borrowed" -- on cross-module calls the k
 The cap returned as a return value is "caller-owned" so you must call `cap_release` when you're done with it -- even if it's a boxed integer, you need to release the index so it can be reused.
 
 Note that ports don't need to validate a class_ref as the callback function's address serves this purpose implicitly.
+
+When done with it, use `cap_revoke` to invalidate the callback. This can be done within the handler function to enforce call-once semantics.
 
 # ABI
 
