@@ -60,13 +60,13 @@ For web applications, this mostly means that your failure scenario is a "crash" 
 
 # Kernel object types and syscalls
 
-Capability references may point to one of various types of kernel objects. This is a single shared namespace; making a syscall on an object of the wrong type will fail gracefully. Processes are assumed to be able to keep track of their own indexes, just like they track pointer types. :)
+Capability references may point to one of various types of kernel objects. This is a single shared namespace per module; making a syscall on an object of the wrong type will fail gracefully, but making message calls to a handle with an unexpected interface may be less forgiving! Processes are assumed to be able to keep track of their own indexes, just like they track pointer types. :)
 
+* Null sigil (`CAP_NULL = 0`, cannot be released or reassigned)
 * Boxed values
 * Send buffers
 * Recv buffers
 * Handles
-* Ports
 
 Objects keep track of which module created them and the owner may perform privileged operations on them, such as revoking the validity of a buffer or retrieving the local pointer value of a handle. Attempting to perform these operations on another module's handle will fail gracefully.
 
@@ -74,9 +74,9 @@ Objects keep track of which module created them and the owner may perform privil
 
 The following syscall functions for the module->kernel API are valid on all cap types:
 
-* `cap_release(cap)`: Releases the cap index from the local namespace, and queues it for reuse on future cap allocation. Call this on caps you got as a return value from a syscall or port call, but never on "borrowed" references from port call arguments. This does not free any resources belonging to the owner process.
+* `cap_release(cap)`: Releases the cap index from the local namespace, and queues it for reuse on future cap allocation. Call this on caps you got as a return value from a syscall or message call, but never on "borrowed" references from port call arguments. This does not free any resources belonging to the owner process, which may have other live references.
 * `cap_retain(cap) -> cap2`: Creates a new index for the cap reference, which you may keep and use after the original one is `cap_release`d.
-* `cap_revoke(cap)`: Invalidates an owned object, so it can no longer be used. Suitable for calling to revoke buffers, handles, and ports from being used after resources are freed. Note that this does not release the index, which is still allocated.
+* `cap_revoke(cap)`: Invalidates an owned object, so it can no longer be used. Suitable for calling to revoke buffers and handles from being used after resources are freed. Note that this does not release the index, which is still allocated.
 
 ## Boxed values
 
@@ -116,33 +116,33 @@ When done with it, use `cap_revoke` to invalidate the pointer.
 
 A handle holds an opaque pointer in your module's address space, which can be retrieved if you're the owner but not otherwise. This lets modules create un-forgeable references to objects or structs, which can be passed away and then passed back.
 
-* `handle_create(user_data, class_ref) -> cap`
-* `handle_get_badge(cap, class_ref) -> user_data`
-* @todo rename to handle_user_data? merge with `port_user_data`?
+Handles may also hold zero or more function pointers, which holders of the handle may invoke as "message" calls. This makes handles suitable for opaque handles (state pointer only), closures (state pointer plus one function pointer), or object interfaces (state pointer plus multiple function pointers, indexed by application-specific convention).
+
+* `handle_create(class_ref, user_data, funcs_ptr, funcs_len) -> cap`: create a new handle with the give opaque class ref pointer, instance pointer, and an array of zero or more function pointers.
+* `handle_user_data(cap, class_ref) -> user_data`: retrieve the instance pointer for an owned cap, given a matching opaque class ref pointer.
 
 The "class ref" opaque pointer is used to validate the handle along with the cap ownership -- it's convenient to use something like a symbol address that's type-unique within the process. If you ask for a handle's user_data without owning it, or without a matching class_ref, you'll get NULL back.
 
 When done with it, use `cap_revoke` to invalidate the pointer.
 
-## Ports
+## Message calls
 
-Ports are indirect function references for cross-module calls. Given a port, you can make synchronous calls to it with some specific number of parameters (currently from 0 to 4) and a single return value, all of which are in the caps namespace.
+Given a handle and a method index, you can make synchronous calls to it with some specific number of parameters (currently from 0 to 4) and a single return value, all of which are in the caps namespace.
 
-When you create a port, you associate it with a callable function pointer and an opaque user data pointer, which can be retrieved by the owning module when taking an incoming call. This allows routing runtime-generated callbacks as well as traditional fixed functions.
+When you create a handle, you associate it with an array of callable function pointers and an opaque user data pointer, which can be retrieved by the owning module when taking an incoming call. This allows routing runtime-generated callbacks as well as traditional fixed functions.
 
-Calling a port with the wrong number of parameters is not yet defined behavior, it will probably work but pass null caps for missing params.
+Calling a port with the wrong number of parameters is not yet fully defined behavior, it will probably work but pass null caps for missing params.
 
-* `port_create0`, ... `port_create4`: Create a call port with the given fixed number of arguments, function pointer, and user_data.
-* `port_call0`, ... `port_call4`: Call a port with the given caps arguments and get one cap back.
-* `port_user_data`: Retrieve the opaque user_data pointer for the given call port. (The call port is passed back to your function for this purpose.)
+* `handle_call0(handle, index) -> cap_ret`
+* `handle_call1(handle, index, cap1) -> cap_ret`
+* `handle_call2(handle, index, cap1, cap2) -> cap_ret`
+* `handle_call3(handle, index, cap1, cap2, cap3) -> cap_ret`
+* `handle_call4(handle, index, cap1, cap2, cap3, cap4) -> cap_ret`
+* ... more may be added, perhaps up to 8.
 
 Note that caps passed as arguments are "borrowed" -- on cross-module calls the kernel layer will retain/release the transferred caps on entry/exit. So if you receive a cap as an argument and want to keep it for later, you must `cap_retain` it and keep the copy.
 
 The cap returned as a return value is "caller-owned" so you must call `cap_release` when you're done with it -- even if it's a boxed integer, you need to release the index so it can be reused.
-
-Note that ports don't need to validate a class_ref as the callback function's address serves this purpose implicitly.
-
-When done with it, use `cap_revoke` to invalidate the callback. This can be done within the handler function to enforce call-once semantics.
 
 # ABI
 
