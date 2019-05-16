@@ -55,7 +55,7 @@ Objects keep track of which module created them and the owner may perform privil
 The following syscall functions for the module->kernel API are valid on all cap types:
 
 * `cap_release(cap)`: Releases the cap index from the local namespace, and queues it for reuse on future cap allocation. Call this on caps you got as a return value from a syscall or port call, but never on "borrowed" references from port call arguments. This does not free any resources belonging to the owner process.
-* `cap_retain(cap)`: Creates a new index for the cap reference, which you may keep and use after the original one is `cap_release`d.
+* `cap_retain(cap) -> cap2`: Creates a new index for the cap reference, which you may keep and use after the original one is `cap_release`d.
 * `cap_revoke(cap)`: Invalidates an owned object, so it can no longer be used. Suitable for calling to revoke buffers, handles, and ports from being used after resources are freed. Note that this does not release the index, which is still allocated.
 
 ## Boxed values
