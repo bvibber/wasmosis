@@ -72,6 +72,8 @@ This also means that boxes are "unowned", since they don't have space for a refe
 
 Note that there is no `i64` or `u64` boxed type, as until `BigInt` is reliably available WebAssembly and JS can't send `i64`s to each other.
 
+Similarly, floating-point transfers will canonicalize NaN values due to the limitations of the JavaScript kernel. If you need to transfer 64-bit ints or custom NaN values across modules, use a byte-wise buffer.
+
 ## Send buffers
 
 Send buffers are sent to another module, which can read them but not write back to them or access beyond the boundaries. They're suitable for constant data that must not be altered.
