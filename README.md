@@ -166,7 +166,7 @@ Non-JS kernels for non-web WebAssembly embeddings would also be possible, but I 
 
 Further, there is nothing really WebAssembly-specific in the API... The C and Rust APIs, if defined with appropriately portable types, could also work when compiling to native code.
 
-A native implementation of the kernel and ABI that uses container isolation is left as an exercise for another time... however it may be useful for testing to make native builds of things that use an in-process dummy kernel. This would provide no memory isolation, but could keep separate caps namespaces for each module, switching active processes at the `port_call` boundary.
+A native implementation of the kernel and ABI that uses container isolation is left as an exercise for another time... however it may be useful for testing to make native builds of things that use an in-process dummy kernel. This would provide no memory isolation, but could keep separate caps namespaces for each module, switching active processes at the `handle_call*` boundary.
 
 # License
 
