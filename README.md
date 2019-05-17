@@ -99,7 +99,8 @@ Similarly, floating-point transfers will canonicalize NaN values due to the limi
 Send buffers are sent to another module, which can read them but not write back to them or access beyond the boundaries. They're suitable for constant data that must not be altered.
 
 * `sendbuf_create(src_ptr, len) -> cap`
-* `sendbuf_read(cap, dest_ptr, len) -> bytes_copied`: Copies the buffer from one module's memory to another, within defined limits.
+* `sendbuf_read(cap, dest_ptr, len) -> bytes_read`: Copies the buffer from one module's memory to another, within defined limits. This advances an internal pointer, and may be called multiple times with different sub-destinations.
+* `sendbuf_bytes_read(cap) -> bytes_read`: For an owned cap, returns the internal pointer of how many bytes have been read.
 
 When done with it, use `cap_revoke` to invalidate the pointer.
 
@@ -108,7 +109,8 @@ When done with it, use `cap_revoke` to invalidate the pointer.
 Recv buffers can be written to by other modules, but they can't read what's in it. This allows sending a reference to allocated-but-uninitialized memory without fear of old data being read out of it.
 
 * `recvbuf_create(dest_ptr, len) -> cap`
-* `recvbuf_write(cap, src_ptr, len) -> bytes_copied`: Copies the buffer from one module's memory to another, within defined limits.
+* `recvbuf_write(cap, src_ptr, len) -> bytes_written`: Copies the buffer from one module's memory to another, within defined limits. This advances an internal pointer, and may be called multiple times with different sub-sources.
+* `sendbuf_bytes_written(cap) -> bytes_written`: For an owned cap, returns the internal pointer of how many bytes have been written. This should be used instead of trusting a count returned by another module, to avoid consuming your own uninitialized memory.
 
 When done with it, use `cap_revoke` to invalidate the pointer.
 
