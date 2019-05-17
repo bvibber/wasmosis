@@ -162,6 +162,24 @@ In the C API, syscall names will be exposed in a flat namespace as `__wasmosis_c
 
 A Rust API building on the same syscalls will have prettier structs and functions wrapping these to aid in type-safety and lifetime control.
 
+## Application APIs
+
+Application-specific protocols providing function-oriented or object-oriented interfaces can be built on top of handles and message calls. Currently there is no reference counting for handle cap refs, but this might be a useful extension.
+
+## Bootstrap
+
+_This design is not final._
+
+A module, once loaded, won't be able to do anything without a callable handle from some other service! There are two main ways to get a cap value into the module:
+
+* Caps may be passed into an _exported_ entry point function.
+* WebAssembly modules may _import_ foreign functions at instantiation time, which are made available for call just as local functions. (Can also import numeric values for global variables, though I'm not 100% sure these work for data symbols. Need to research more.) These functions could return specific factory interfaces.
+
+Passing an interface factory handle into an entry point makes sense for things that feel like they'd be passed into a state struct or object. On the other hand, imports to the global function namespace might make it much easier to implement various wrapper functions around multiple types.
+
+Ideally it should be statically determinable whether a module claims to support a particular application protocol before firing it up and sending data into it (though of course it can always implement a protocol "wrong"). This will probably be based on its exports.
+
+
 # Portability
 
 Non-JS kernels for non-web WebAssembly embeddings would also be possible, but I have not yet looked into it.
