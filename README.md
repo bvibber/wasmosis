@@ -120,7 +120,7 @@ A handle holds an opaque pointer in your module's address space, which can be re
 
 Handles may also hold zero or more function pointers, which holders of the handle may invoke as "message" calls. This makes handles suitable for opaque handles (state pointer only), closures (state pointer plus one function pointer), or object interfaces (state pointer plus multiple function pointers, indexed by application-specific convention).
 
-* `handle_create(class_ref, user_data, funcs_ptr, funcs_len) -> cap`: create a new handle with the give opaque class ref pointer, instance pointer, and an array of zero or more function pointers.
+* `handle_create(class_ref, user_data, funcs_ptr, funcs_len) -> cap`: create a new handle with the given opaque class ref pointer, instance pointer, and an array of zero or more function pointers.
 * `handle_user_data(cap, class_ref) -> user_data`: retrieve the instance pointer for an owned cap, given a matching opaque class ref pointer.
 
 The "class ref" opaque pointer is used to validate the handle along with the cap ownership -- it's convenient to use something like a symbol address that's type-unique within the process. If you ask for a handle's user_data without owning it, or without a matching class_ref, you'll get NULL back.
