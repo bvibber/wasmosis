@@ -110,7 +110,7 @@ Recv buffers can be written to by other modules, but they can't read what's in i
 
 * `recvbuf_create(dest_ptr, len) -> cap`
 * `recvbuf_write(cap, src_ptr, len) -> bytes_written`: Copies the buffer from one module's memory to another, within defined limits. This advances an internal pointer, and may be called multiple times with different sub-sources.
-* `sendbuf_bytes_written(cap) -> bytes_written`: For an owned cap, returns the internal pointer of how many bytes have been written. This should be used instead of trusting a count returned by another module, to avoid consuming your own uninitialized memory.
+* `recvbuf_bytes_written(cap) -> bytes_written`: For an owned cap, returns the internal pointer of how many bytes have been written. This should be used instead of trusting a count returned by another module, to avoid consuming your own uninitialized memory.
 
 When done with it, use `cap_revoke` to invalidate the pointer.
 
