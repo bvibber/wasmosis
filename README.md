@@ -96,7 +96,7 @@ Similarly, floating-point transfers will canonicalize NaN values due to the limi
 
 ## Send buffers
 
-Send buffers are sent to another module, which can read them but not write back to them or access beyond the boundaries. They're suitable for constant data that must not be altered.
+Send buffers are slices of your memory space to be sent to another module, which can read them but not write back to them or access beyond the boundaries. They're suitable for constant data that must not be altered.
 
 * `sendbuf_create(src_ptr, len) -> cap`
 * `sendbuf_read(cap, dest_ptr, len) -> bytes_read`: Copies the buffer from one module's memory to another, within defined limits. This advances an internal pointer, and may be called multiple times with different sub-destinations.
